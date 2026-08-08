@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Edit Product</title>
+
+    <link rel="stylesheet" href="../CSS/styles.css">
+
+</head>
+
+<body>
+
+<header>
+
+    <h2>🌾 RuralMart</h2>
+
+    <button onclick="logout()">Logout</button>
+
+</header>
+
+<div class="container">
+
+    <h1>Edit Product</h1>
+
+    <form id="editProductForm">
+
+        <input
+                type="text"
+                id="name"
+                placeholder="Product Name"
+                required>
+
+        <br><br>
+
+        <textarea
+                id="description"
+                placeholder="Description"
+                rows="4"></textarea>
+
+        <br><br>
+
+        <select id="category" required>
+
+            <option value="">Select Category</option>
+
+            <option value="GROCERY">Grocery</option>
+
+            <option value="DAIRY">Dairy</option>
+
+            <option value="VEGETABLES">Vegetables</option>
+
+            <option value="FRUITS">Fruits</option>
+
+            <option value="SNACKS">Snacks</option>
+
+            <option value="BEVERAGES">Beverages</option>
+
+            <option value="PERSONAL_CARE">Personal Care</option>
+
+            <option value="HOUSEHOLD">Household</option>
+
+        </select>
+
+        <br><br>
+
+        <input
+                type="number"
+                id="price"
+                placeholder="Price"
+                required>
+
+        <br><br>
+
+        <input
+                type="number"
+                id="stock"
+                placeholder="Stock"
+                required>
+
+        <br><br>
+
+        <input
+                type="text"
+                id="brand"
+                placeholder="Brand">
+
+        <br><br>
+
+        <input
+                type="text"
+                id="unit"
+                placeholder="Unit">
+
+        <br><br>
+
+        <input
+                type="text"
+                id="imageUrl"
+                placeholder="Image URL">
+
+        <br><br>
+
+        <button type="submit">
+
+            Update Product
+
+        </button>
+
+    </form>
+
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/logout.js"></script>
+<script src="../js/product.js"></script>
+
+</body>
+
+</html>

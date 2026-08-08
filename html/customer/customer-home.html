@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>RuralMart | Shop</title>
+
+    <link rel="stylesheet"
+          href="../../CSS/styles.css">
+
+</head>
+
+<body>
+
+    <h2>🌾 RuralMart</h2>
+
+    <button onclick="logout()">
+        Logout
+    </button>
+
+    <h1>Welcome to RuralMart 👋</h1>
+
+    <p>
+        Browse products available from our shops.
+    </p>
+
+
+    <!-- Search -->
+
+    <input
+        type="text"
+        id="searchKeyword"
+        placeholder="Search products...">
+
+    <button onclick="searchCustomerProducts()">
+        Search
+    </button>
+
+    <button onclick="loadCustomerProducts()">
+        Clear
+    </button>
+
+
+    <hr>
+
+
+    <!-- Categories -->
+
+    <h3>Categories</h3>
+
+    <button onclick="loadCategory('GROCERY')">
+        Grocery
+    </button>
+
+    <button onclick="loadCategory('DAIRY')">
+        Dairy
+    </button>
+
+    <button onclick="loadCategory('VEGETABLES')">
+        Vegetables
+    </button>
+
+    <button onclick="loadCategory('FRUITS')">
+        Fruits
+    </button>
+
+    <button onclick="loadCategory('SNACKS')">
+        Snacks
+    </button>
+
+    <button onclick="loadCategory('BEVERAGES')">
+        Beverages
+    </button>
+
+    <button onclick="loadCategory('PERSONAL_CARE')">
+        Personal Care
+    </button>
+
+    <button onclick="loadCategory('HOUSEHOLD')">
+        Household
+    </button>
+
+
+    <hr>
+
+
+    <h2>Products</h2>
+
+    <div id="productContainer">
+
+        Loading products...
+
+    </div>
+
+
+    <script src="../../js/api.js"></script>
+    <script src="../../js/auth.js"></script>
+    <script src="../../js/logout.js"></script>
+    <script src="../../js/customer.js"></script>
+
+</body>
+
+</html>

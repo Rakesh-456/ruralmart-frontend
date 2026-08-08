@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Create Shop | RuralMart</title>
+
+    <link rel="stylesheet"
+          href="../CSS/styles.css">
+
+</head>
+
+<body>
+
+    <h2>🌾 RuralMart</h2>
+
+    <button onclick="window.location.href='dashboard.html'">
+        Dashboard
+    </button>
+
+    <button onclick="logout()">
+        Logout
+    </button>
+
+    <hr>
+
+    <h1>Create Your Shop</h1>
+
+    <form id="createShopForm">
+
+        <label>
+            Shop Name
+        </label>
+
+        <br>
+
+        <input
+            type="text"
+            id="shopName"
+            placeholder="Enter shop name"
+            required>
+
+        <br><br>
+
+
+        <label>
+            Phone Number
+        </label>
+
+        <br>
+
+        <input
+            type="text"
+            id="phoneNumber"
+            placeholder="Enter 10 digit phone number"
+            maxlength="10"
+            required>
+
+        <br><br>
+
+
+        <label>
+            Address
+        </label>
+
+        <br>
+
+        <textarea
+            id="address"
+            placeholder="Enter shop address"
+            required>
+        </textarea>
+
+        <br><br>
+
+
+        <label>
+            Description
+        </label>
+
+        <br>
+
+        <textarea
+            id="description"
+            placeholder="Enter shop description">
+        </textarea>
+
+        <br><br>
+
+
+        <button type="submit">
+            Create Shop
+        </button>
+
+    </form>
+
+    <p id="message"></p>
+
+
+    <script src="../js/api.js"></script>
+
+    <script src="../js/logout.js"></script>
+
+    <script src="../js/shop.js"></script>
+
+</body>
+
+</html>
