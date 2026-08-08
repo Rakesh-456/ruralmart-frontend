@@ -1,399 +1,285 @@
-if (!isLoggedIn()) {
+// ==========================================================================
+// RuralMart - Admin Product Management
+// ==========================================================================
 
-    window.location.href = "login.html";
-
-}
-
-let currentPage = 0;
-const pageSize = 5;
-
-async function loadPage(page) {
-
-    try {
-
-        const response = await apiGet(
-            `/api/products/page?page=${page}&size=${pageSize}`
-        );
-
-        displayProducts(response.content);
-
-        currentPage = page;
-
-        document.getElementById("pageNumber").textContent =
-            currentPage + 1;
-
-        document.getElementById("previousBtn").disabled =
-            response.first;
-
-        document.getElementById("nextBtn").disabled =
-            response.last;
-
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-        alert(error.message);
-
-    }
-
-}
-
-// ==========================================
-// RuralMart - Product Module
-// ==========================================
+let allMyProducts = [];
+let pendingDeleteId = null;
 
 document.addEventListener("DOMContentLoaded", () => {
+  if (!requireAuth("ADMIN")) return;
 
-    // Products Page
-    if (document.getElementById("productTable")) {
-        loadPage(0);
-    }
+  // Products list page
+  if (document.getElementById("productTable")) {
+    renderNav("products");
+    loadMyProducts();
 
-    // Add Product Page
-    const addProductForm = document.getElementById("addProductForm");
+    document.getElementById("searchInput").addEventListener("input", applyFilters);
+    document.getElementById("categoryFilter").addEventListener("change", applyFilters);
+    document.getElementById("statusFilter").addEventListener("change", applyFilters);
 
-    if (addProductForm) {
-        addProductForm.addEventListener("submit", addProduct);
-    }
+    document.getElementById("confirmDeleteBtn").addEventListener("click", confirmDelete);
+    document.getElementById("cancelDeleteBtn").addEventListener("click", closeDeleteModal);
+  }
 
-    // Edit Product Page
-    const editProductForm = document.getElementById("editProductForm");
+  // Add product page
+  const addForm = document.getElementById("addProductForm");
+  if (addForm) {
+    renderNav("products");
+    populateCategorySelect(document.getElementById("category"));
+    addForm.addEventListener("submit", addProduct);
+  }
 
-    if (editProductForm) {
-
-        loadProductDetails();
-
-        editProductForm.addEventListener("submit", updateProduct);
-
-    }
-
+  // Edit product page
+  const editForm = document.getElementById("editProductForm");
+  if (editForm) {
+    renderNav("products");
+    populateCategorySelect(document.getElementById("category"));
+    loadProductForEdit();
+    editForm.addEventListener("submit", updateProduct);
+  }
 });
 
-
-// ==========================================
-// Load My Products
-// ==========================================
-
-async function loadProducts() {
-
-    try {
-
-        const products = await apiGet("/api/products/my-shop");
-
-        displayProducts(products);
-
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-        alert(error.message);
-
-    }
-
+function populateCategorySelect(select) {
+  if (!select) return;
+  select.innerHTML =
+    `<option value="">Select category</option>` +
+    CATEGORIES.map((c) => `<option value="${c.value}">${c.label}</option>`).join("");
 }
 
-function nextPage() {
+// ==========================================================================
+// List / filters
+// ==========================================================================
 
-    loadPage(currentPage + 1);
+async function loadMyProducts() {
+  const table = document.getElementById("productTable");
+  table.innerHTML = `<tr><td colspan="6" class="text-center text-muted" style="padding:40px;">Loading products...</td></tr>`;
 
+  try {
+    allMyProducts = await apiGet("/api/products/my-shop");
+    populateCategorySelect(document.getElementById("categoryFilter"));
+    document.getElementById("categoryFilter").insertAdjacentHTML("afterbegin", `<option value="">All categories</option>`);
+    applyFilters();
+  } catch (error) {
+    table.innerHTML = `<tr><td colspan="6" style="padding:30px;">
+      <div class="empty-state" style="padding:20px;">
+        <p>${escapeHtml(error.message)}</p>
+        <p class="form-hint">If you haven't created a shop yet, add products from your <a href="${resolvePath("admin/create-shop.html")}">shop setup page</a> first.</p>
+      </div></td></tr>`;
+  }
 }
 
-function previousPage() {
+function applyFilters() {
+  const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
+  const category = document.getElementById("categoryFilter").value;
+  const status = document.getElementById("statusFilter").value;
 
-    if (currentPage > 0) {
+  const filtered = allMyProducts.filter((p) => {
+    const matchesKeyword = !keyword || p.name.toLowerCase().includes(keyword) || p.brand.toLowerCase().includes(keyword);
+    const matchesCategory = !category || p.category === category;
+    const matchesStatus = !status || p.status === status;
+    return matchesKeyword && matchesCategory && matchesStatus;
+  });
 
-        loadPage(currentPage - 1);
-
-    }
-
+  renderProductTable(filtered);
 }
 
-
-
-// ==========================================
-// Search Products
-// ==========================================
-
-async function searchProducts() {
-
-    const keyword =
-        document.getElementById("searchKeyword").value.trim();
-
-    if (keyword === "") {
-
-        loadProducts();
-
-        return;
-
-    }
-
-    try {
-
-        const products =
-            await apiGet(`/api/products/search?keyword=${encodeURIComponent(keyword)}`);
-
-        displayProducts(products);
-
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-        alert(error.message);
-
-    }
-
+function statusBadgeClass(status) {
+  if (status === "ACTIVE") return "badge-active";
+  if (status === "OUT_OF_STOCK") return "badge-out";
+  if (status === "DISCONTINUED") return "badge-discontinued";
+  return "badge-inactive";
 }
 
-function clearSearch() {
+function renderProductTable(products) {
+  const table = document.getElementById("productTable");
 
-    document.getElementById("searchKeyword").value = "";
+  if (!products || products.length === 0) {
+    table.innerHTML = `<tr><td colspan="6">
+      <div class="empty-state">
+        <div class="icon">📦</div>
+        <h3>No products found</h3>
+        <p>Try adjusting your search or filters, or add a new product.</p>
+      </div></td></tr>`;
+    return;
+  }
 
-    loadProducts();
-
+  table.innerHTML = products
+    .map(
+      (p) => `
+    <tr>
+      <td data-label="Product">
+        <div class="product-name-cell">
+          <img class="product-thumb" src="${escapeAttr(p.imageUrl)}" onerror="this.src='https://placehold.co/80/f0eee6/6b7060?text=%20'">
+          <div>
+            <strong>${escapeHtml(p.name)}</strong>
+            <div class="form-hint">${escapeHtml(p.brand)} · ${escapeHtml(p.unit)}</div>
+          </div>
+        </div>
+      </td>
+      <td data-label="Category">${p.category.replace("_", " ")}</td>
+      <td data-label="Price">₹${p.price}</td>
+      <td data-label="Stock">${p.stock}</td>
+      <td data-label="Status"><span class="badge ${statusBadgeClass(p.status)}">${p.status.replace("_", " ")}</span></td>
+      <td data-label="Actions">
+        <div class="row-actions">
+          <button class="btn btn-outline btn-sm" onclick="editProduct(${p.id})">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="openDeleteModal(${p.id})">Delete</button>
+        </div>
+      </td>
+    </tr>`
+    )
+    .join("");
 }
-
-
-// ==========================================
-// Add Product
-// ==========================================
-
-async function addProduct(event) {
-
-    event.preventDefault();
-
-    const product = {
-
-        name: document.getElementById("name").value.trim(),
-
-        description: document.getElementById("description").value.trim(),
-
-        category: document.getElementById("category").value,
-
-        price: parseFloat(document.getElementById("price").value),
-
-        stock: parseInt(document.getElementById("stock").value),
-
-        brand: document.getElementById("brand").value.trim(),
-
-        unit: document.getElementById("unit").value.trim(),
-
-        imageUrl: document.getElementById("imageUrl").value.trim()
-
-    };
-
-    try {
-
-        await apiPost("/api/products", product);
-
-        alert("Product Added Successfully");
-
-        window.location.href = "products.html";
-
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-        alert(error.message);
-
-    }
-
-}
-
-
-// ==========================================
-// Delete Product
-// ==========================================
-
-async function deleteProduct(id) {
-
-    const confirmDelete = confirm(
-        "Are you sure you want to delete this product?"
-    );
-
-    if (!confirmDelete) {
-        return;
-    }
-
-    try {
-
-        await apiDelete(`/api/products/${id}`);
-
-        alert("Product Deleted Successfully");
-
-        loadProducts();
-
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-        alert(error.message);
-
-    }
-
-}
-
-
-// ==========================================
-// Edit Product
-// ==========================================
 
 function editProduct(id) {
-
-    window.location.href = `edit-product.html?id=${id}`;
-
+  goTo(`admin/edit-product.html?id=${id}`);
 }
 
-// ==========================================
-// Load Product Details
-// ==========================================
-
-async function loadProductDetails() {
-
-    const params = new URLSearchParams(window.location.search);
-
-    const id = params.get("id");
-
-    try {
-
-        const product = await apiGet(`/api/products/${id}`);
-
-        document.getElementById("name").value = product.name;
-        document.getElementById("description").value = product.description;
-        document.getElementById("category").value = product.category;
-        document.getElementById("price").value = product.price;
-        document.getElementById("stock").value = product.stock;
-        document.getElementById("brand").value = product.brand;
-        document.getElementById("unit").value = product.unit;
-        document.getElementById("imageUrl").value = product.imageUrl;
-
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-        alert(error.message);
-
-    }
-
+function openDeleteModal(id) {
+  pendingDeleteId = id;
+  document.getElementById("deleteModalBackdrop").classList.add("open");
 }
 
-// ==========================================
-// Update Product
-// ==========================================
+function closeDeleteModal() {
+  pendingDeleteId = null;
+  document.getElementById("deleteModalBackdrop").classList.remove("open");
+}
+
+async function confirmDelete() {
+  if (!pendingDeleteId) return;
+  const btn = document.getElementById("confirmDeleteBtn");
+  btn.disabled = true;
+  btn.textContent = "Deleting...";
+
+  try {
+    await apiDelete(`/api/products/${pendingDeleteId}`);
+    closeDeleteModal();
+    loadMyProducts();
+  } catch (error) {
+    alert(error.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Delete product";
+  }
+}
+
+// ==========================================================================
+// Add product
+// ==========================================================================
+
+async function addProduct(event) {
+  event.preventDefault();
+  const form = event.target;
+  clearFieldErrors(form);
+  setAlert("addProductAlert", null);
+
+  const product = readProductForm();
+
+  setButtonLoading("addProductSubmit", true, "Adding...");
+  const result = await apiRequestSafe("/api/products", "POST", product);
+  setButtonLoading("addProductSubmit", false, "Add product");
+
+  if (!result.ok) {
+    if (result.data) {
+      applyFieldErrors(result.data);
+    } else {
+      setAlert("addProductAlert", result.error.message, "error");
+    }
+    return;
+  }
+
+  goTo("admin/products.html");
+}
+
+// ==========================================================================
+// Edit product
+// ==========================================================================
+
+async function loadProductForEdit() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
+  if (!id) {
+    goTo("admin/products.html");
+    return;
+  }
+
+  try {
+    const product = await apiGet(`/api/products/${id}`);
+    document.getElementById("name").value = product.name;
+    document.getElementById("description").value = product.description;
+    document.getElementById("category").value = product.category;
+    document.getElementById("price").value = product.price;
+    document.getElementById("stock").value = product.stock;
+    document.getElementById("brand").value = product.brand;
+    document.getElementById("unit").value = product.unit;
+    document.getElementById("imageUrl").value = product.imageUrl;
+    document.getElementById("editProductTitle").textContent = `Edit “${product.name}”`;
+  } catch (error) {
+    setAlert("editProductAlert", error.message, "error");
+  }
+}
 
 async function updateProduct(event) {
+  event.preventDefault();
+  const form = event.target;
+  clearFieldErrors(form);
+  setAlert("editProductAlert", null);
 
-    event.preventDefault();
+  const id = new URLSearchParams(window.location.search).get("id");
+  const product = readProductForm();
 
-    const id = new URLSearchParams(window.location.search).get("id");
+  setButtonLoading("editProductSubmit", true, "Saving...");
+  const result = await apiRequestSafe(`/api/products/${id}`, "PUT", product);
+  setButtonLoading("editProductSubmit", false, "Save changes");
 
-    const product = {
-
-        name: document.getElementById("name").value.trim(),
-
-        description: document.getElementById("description").value.trim(),
-
-        category: document.getElementById("category").value,
-
-        price: parseFloat(document.getElementById("price").value),
-
-        stock: parseInt(document.getElementById("stock").value),
-
-        brand: document.getElementById("brand").value.trim(),
-
-        unit: document.getElementById("unit").value.trim(),
-
-        imageUrl: document.getElementById("imageUrl").value.trim()
-
-    };
-
-    try {
-
-        await apiPut(`/api/products/${id}`, product);
-
-        alert("Product Updated Successfully");
-
-        window.location.href = "products.html";
-
+  if (!result.ok) {
+    if (result.data) {
+      applyFieldErrors(result.data);
+    } else {
+      setAlert("editProductAlert", result.error.message, "error");
     }
+    return;
+  }
 
-    catch (error) {
-
-        console.error(error);
-
-        alert(error.message);
-
-    }
-
+  goTo("admin/products.html");
 }
 
-// ==========================================
-// Display Products
-// ==========================================
+function readProductForm() {
+  return {
+    name: document.getElementById("name").value.trim(),
+    description: document.getElementById("description").value.trim(),
+    category: document.getElementById("category").value,
+    price: parseFloat(document.getElementById("price").value),
+    stock: parseInt(document.getElementById("stock").value, 10),
+    brand: document.getElementById("brand").value.trim(),
+    unit: document.getElementById("unit").value.trim(),
+    imageUrl: document.getElementById("imageUrl").value.trim(),
+  };
+}
 
-function displayProducts(products) {
+function setAlert(id, message, type) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!message) {
+    el.className = "alert";
+    el.textContent = "";
+    return;
+  }
+  el.className = `alert show alert-${type}`;
+  el.textContent = message;
+}
 
-    const table = document.getElementById("productTable");
+function setButtonLoading(id, loading, label) {
+  const btn = document.getElementById(id);
+  if (!btn) return;
+  btn.disabled = loading;
+  btn.textContent = label;
+}
 
-    if (!table) return;
-
-    table.innerHTML = "";
-
-    if (products.length === 0) {
-
-        table.innerHTML = `
-            <tr>
-                <td colspan="7" style="text-align:center;">
-                    No Products Found
-                </td>
-            </tr>
-        `;
-
-        return;
-
-    }
-
-    products.forEach(product => {
-
-    table.innerHTML += `
-        <tr>
-
-            <td>${product.name}</td>
-
-            <td>${product.category}</td>
-
-            <td>₹${product.price}</td>
-
-            <td>${product.stock}</td>
-
-            <td>${product.status}</td>
-
-            <td>
-                <button onclick="editProduct(${product.id})">
-                    Edit
-                </button>
-            </td>
-
-            <td>
-                <button onclick="deleteProduct(${product.id})">
-                    Delete
-                </button>
-            </td>
-
-        </tr>
-    `;
-
-});
-
+function escapeHtml(str) {
+  if (str === null || str === undefined) return "";
+  return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function escapeAttr(str) {
+  return escapeHtml(str).replace(/"/g, "&quot;");
 }

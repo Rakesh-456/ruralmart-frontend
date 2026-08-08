@@ -1,219 +1,124 @@
-// ==========================================
-// RuralMart - Profile Module
-// ==========================================
+// ==========================================================================
+// RuralMart - Profile
+// ==========================================================================
 
 document.addEventListener("DOMContentLoaded", () => {
+  if (!requireAuth()) return;
 
-    loadProfile();
+  renderNav(null);
+  loadProfile();
 
-    const profileForm =
-        document.getElementById("profileForm");
+  const profileForm = document.getElementById("profileForm");
+  if (profileForm) profileForm.addEventListener("submit", updateProfile);
 
-    const passwordForm =
-        document.getElementById("passwordForm");
+  const passwordForm = document.getElementById("passwordForm");
+  if (passwordForm) passwordForm.addEventListener("submit", changePassword);
 
-
-    if (profileForm) {
-
-        profileForm.addEventListener(
-            "submit",
-            updateProfile
-        );
-
-    }
-
-
-    if (passwordForm) {
-
-        passwordForm.addEventListener(
-            "submit",
-            changePassword
-        );
-
-    }
-
+  if (window.location.hash === "#password") {
+    const target = document.getElementById("passwordCard");
+    if (target) target.scrollIntoView({ behavior: "smooth" });
+  }
 });
 
-
-// ==========================================
-// Load Profile
-// ==========================================
-
 async function loadProfile() {
+  try {
+    const user = await apiGet("/api/users/profile");
+    saveUser(user); // keep localStorage in sync in case it changed elsewhere
 
-    try {
+    document.getElementById("profileAvatarInitials").textContent = initialsOf(user.fullName);
+    document.getElementById("profileHeadingName").textContent = user.fullName;
+    document.getElementById("profileHeadingRole").textContent = user.role;
 
-        const user =
-            await apiGet("/api/users/profile");
-
-
-        document.getElementById("fullName").value =
-            user.fullName || "";
-
-
-        document.getElementById("email").value =
-            user.email || "";
-
-
-        document.getElementById("phoneNumber").value =
-            user.phoneNumber || "";
-
-
-        document.getElementById("role").value =
-            user.role || "";
-
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-        alert(error.message);
-
-    }
-
+    document.getElementById("fullName").value = user.fullName || "";
+    document.getElementById("email").value = user.email || "";
+    document.getElementById("phoneNumber").value = user.phoneNumber || "";
+  } catch (error) {
+    setAlert("profileAlert", error.message, "error");
+  }
 }
-
-
-// ==========================================
-// Update Profile
-// ==========================================
 
 async function updateProfile(event) {
+  event.preventDefault();
+  const form = event.target;
+  clearFieldErrors(form);
+  setAlert("profileAlert", null);
 
-    event.preventDefault();
+  const request = {
+    fullName: document.getElementById("fullName").value.trim(),
+    phoneNumber: document.getElementById("phoneNumber").value.trim(),
+  };
 
+  setButtonLoading("profileSubmit", true, "Saving...");
+  const result = await apiRequestSafe("/api/users/profile", "PUT", request);
+  setButtonLoading("profileSubmit", false, "Save changes");
 
-    const fullName =
-        document.getElementById("fullName")
-            .value
-            .trim();
-
-
-    const phoneNumber =
-        document.getElementById("phoneNumber")
-            .value
-            .trim();
-
-
-    const request = {
-
-        fullName: fullName,
-
-        phoneNumber: phoneNumber
-
-    };
-
-
-    try {
-
-        const updatedUser =
-            await apiPut(
-                "/api/users/profile",
-                request
-            );
-
-
-        document.getElementById("message")
-            .textContent =
-            "Profile updated successfully.";
-
-
-        document.getElementById("fullName").value =
-            updatedUser.fullName;
-
-
-        document.getElementById("phoneNumber").value =
-            updatedUser.phoneNumber;
-
-
+  if (!result.ok) {
+    if (result.data) {
+      applyFieldErrors(result.data);
+    } else {
+      setAlert("profileAlert", result.error.message, "error");
     }
+    return;
+  }
 
-    catch (error) {
-
-        console.error(error);
-
-        document.getElementById("message")
-            .textContent =
-            error.message;
-
-    }
-
+  saveUser(result.data);
+  document.getElementById("profileHeadingName").textContent = result.data.fullName;
+  document.getElementById("profileAvatarInitials").textContent = initialsOf(result.data.fullName);
+  setAlert("profileAlert", "Profile updated.", "success");
 }
 
-
-// ==========================================
-// Change Password
-// ==========================================
-
 async function changePassword(event) {
+  event.preventDefault();
+  const form = event.target;
+  clearFieldErrors(form);
+  setAlert("passwordAlert", null);
 
-    event.preventDefault();
+  const newPassword = document.getElementById("newPassword").value;
+  const confirmPassword = document.getElementById("confirmPassword").value;
 
+  if (newPassword !== confirmPassword) {
+    setAlert("passwordAlert", "New password and confirmation don't match.", "error");
+    return;
+  }
 
-    const currentPassword =
-        document.getElementById("currentPassword")
-            .value;
+  const request = {
+    currentPassword: document.getElementById("currentPassword").value,
+    newPassword,
+    confirmPassword,
+  };
 
+  setButtonLoading("passwordSubmit", true, "Updating...");
+  const result = await apiRequestSafe("/api/users/change-password", "PUT", request);
+  setButtonLoading("passwordSubmit", false, "Update password");
 
-    const newPassword =
-        document.getElementById("newPassword")
-            .value;
-
-
-    const confirmPassword =
-        document.getElementById("confirmPassword")
-            .value;
-
-
-    if (newPassword !== confirmPassword) {
-
-        document.getElementById("passwordMessage")
-            .textContent =
-            "New passwords do not match.";
-
-        return;
-
+  if (!result.ok) {
+    if (result.data) {
+      applyFieldErrors(result.data);
+    } else {
+      setAlert("passwordAlert", result.error.message, "error");
     }
+    return;
+  }
 
+  setAlert("passwordAlert", "Password changed successfully.", "success");
+  form.reset();
+}
 
-    const request = {
+function setAlert(id, message, type) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!message) {
+    el.className = "alert";
+    el.textContent = "";
+    return;
+  }
+  el.className = `alert show alert-${type}`;
+  el.textContent = message;
+}
 
-        currentPassword: currentPassword,
-
-        newPassword: newPassword,
-
-        confirmPassword: confirmPassword
-
-    };
-
-
-    try {
-
-        await apiPut(
-            "/api/users/change-password",
-            request
-        );
-
-
-        document.getElementById("passwordMessage")
-            .textContent =
-            "Password changed successfully.";
-
-
-        document.getElementById("passwordForm")
-            .reset();
-
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-        document.getElementById("passwordMessage")
-            .textContent =
-            error.message;
-
-    }
-
+function setButtonLoading(id, loading, label) {
+  const btn = document.getElementById(id);
+  if (!btn) return;
+  btn.disabled = loading;
+  btn.textContent = label;
 }

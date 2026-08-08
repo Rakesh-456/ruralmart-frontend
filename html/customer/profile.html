@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Profile — RuralMart</title>
+<link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<div class="page">
+  <div class="container" style="max-width:640px;">
+
+    <div class="page-header">
+      <div class="flex items-center gap-12">
+        <span class="profile-avatar" style="width:52px;height:52px;font-size:1.1rem;" id="profileAvatarInitials"></span>
+        <div>
+          <h1 class="mb-0" id="profileHeadingName">&nbsp;</h1>
+          <span class="badge badge-active" id="profileHeadingRole">&nbsp;</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-pad" style="margin-bottom:20px;">
+      <h3>Profile details</h3>
+      <div id="profileAlert" class="alert"></div>
+      <form id="profileForm" novalidate>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="fullName">Full name</label>
+            <input type="text" id="fullName" required>
+            <div class="field-error-text" data-for="fullName"></div>
+          </div>
+          <div class="form-group">
+            <label for="phoneNumber">Phone number</label>
+            <input type="tel" id="phoneNumber" required>
+            <div class="field-error-text" data-for="phoneNumber"></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" disabled>
+          <div class="form-hint">Email can't be changed.</div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" id="profileSubmit" class="btn btn-primary">Save changes</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card card-pad" id="passwordCard">
+      <h3>Change password</h3>
+      <div id="passwordAlert" class="alert"></div>
+      <form id="passwordForm" novalidate>
+        <div class="form-group">
+          <label for="currentPassword">Current password</label>
+          <input type="password" id="currentPassword" required>
+          <div class="field-error-text" data-for="currentPassword"></div>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="newPassword">New password</label>
+            <input type="password" id="newPassword" required>
+            <div class="field-error-text" data-for="newPassword"></div>
+          </div>
+          <div class="form-group">
+            <label for="confirmPassword">Confirm new password</label>
+            <input type="password" id="confirmPassword" required>
+            <div class="field-error-text" data-for="confirmPassword"></div>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" id="passwordSubmit" class="btn btn-outline">Update password</button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<script src="../../js/api.js"></script>
+<script src="../../js/nav.js"></script>
+<script src="../../js/profile.js"></script>
+</body>
+</html>

@@ -1,61 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>RuralMart</title>
-
+<title>RuralMart — Fresh groceries from rural shops</title>
 <link rel="stylesheet" href="../css/styles.css">
-
 </head>
-
 <body>
 
-<div class="container">
+<header class="site-header">
+  <div class="nav-inner">
+    <a class="brand" href="index.html"><span class="brand-mark">🌾</span> RuralMart</a>
+    <div class="nav-right">
+      <a class="btn btn-ghost" href="login.html">Login</a>
+      <a class="btn btn-primary" href="register.html">Register</a>
+    </div>
+  </div>
+</header>
 
-<div class="card home-card">
+<div class="page">
+  <div class="container">
+    <div class="hero" style="margin-top:32px;">
+      <h1>Fresh groceries, straight from rural shops.</h1>
+      <p>RuralMart connects local grocery shops with customers nearby — browse products, compare prices, and shop from vendors you trust.</p>
+      <div class="hero-search">
+        <a class="btn btn-accent" href="register.html">Get started</a>
+        <a class="btn btn-outline" style="background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.4);color:#fff;" href="login.html">I already have an account</a>
+      </div>
+    </div>
 
-<h1>🌾 RuralMart</h1>
-
-<p>
-
-Welcome to RuralMart.
-
-Manage your products, inventory and shop efficiently.
-
-</p>
-
-<div class="buttons">
-
-<a href="login.html">
-
-<button>
-
-Login
-
-</button>
-
-</a>
-
-<a href="register.html">
-
-<button>
-
-Register
-
-</button>
-
-</a>
-
+    <div class="section" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;">
+      <div class="card card-pad">
+        <h3>For customers</h3>
+        <p>Search and filter groceries from local shops, view details, and build your order — checkout is on the way.</p>
+      </div>
+      <div class="card card-pad">
+        <h3>For shop owners</h3>
+        <p>Set up your shop, list products, manage stock and pricing, and track everything from one dashboard.</p>
+      </div>
+      <div class="card card-pad">
+        <h3>Built for rural reach</h3>
+        <p>A simple, fast experience that works well even on modest connections and smaller screens.</p>
+      </div>
+    </div>
+  </div>
 </div>
 
-</div>
-
-</div>
+<footer class="site-footer">
+  <div class="container">
+    <span>🌾 RuralMart</span>
+    <span>Built for rural grocery commerce.</span>
+  </div>
+</footer>
 
 </body>
-
 </html>

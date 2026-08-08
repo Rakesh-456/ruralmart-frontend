@@ -1,147 +1,116 @@
-// =============================
-// REGISTER
-// =============================
+// ==========================================================================
+// RuralMart - Auth (Register / Login)
+// ==========================================================================
 
-const registerForm = document.getElementById("registerForm");
+document.addEventListener("DOMContentLoaded", () => {
+  // If already logged in, skip straight to the right home page.
+  if (isLoggedIn() && (document.getElementById("loginForm") || document.getElementById("registerForm"))) {
+    goTo(homePathForRole(getRole()));
+    return;
+  }
 
-if (registerForm) {
+  const registerForm = document.getElementById("registerForm");
+  if (registerForm) registerForm.addEventListener("submit", registerUser);
 
-    registerForm.addEventListener("submit", registerUser);
+  const loginForm = document.getElementById("loginForm");
+  if (loginForm) loginForm.addEventListener("submit", loginUser);
+});
 
-}
+// ==========================================================================
+// Register
+// ==========================================================================
 
 async function registerUser(event) {
+  event.preventDefault();
 
-    if (!registerForm) return;
+  const form = event.target;
+  clearFieldErrors(form);
+  setAlert("registerAlert", null);
 
-    event.preventDefault();
+  const request = {
+    fullName: document.getElementById("fullName").value.trim(),
+    email: document.getElementById("email").value.trim(),
+    phoneNumber: document.getElementById("phoneNumber").value.trim(),
+    password: document.getElementById("password").value,
+  };
 
-    const request = {
+  setButtonLoading("registerSubmit", true, "Creating account...");
 
-        fullName: document.getElementById("fullName").value,
+  const result = await apiRequestSafe("/api/auth/register", "POST", request, false);
 
-        email: document.getElementById("email").value,
+  setButtonLoading("registerSubmit", false, "Create account");
 
-        phoneNumber: document.getElementById("phoneNumber").value,
-
-        password: document.getElementById("password").value
-
-    };
-
-    try {
-
-        await apiPost(
-            "/api/auth/register",
-            request,
-            false
-        );
-
-        alert("Registration Successful!");
-
-        window.location.href = "../html/login.html";
-
+  if (!result.ok) {
+    if (result.data) {
+      applyFieldErrors(result.data);
+    } else {
+      setAlert("registerAlert", result.error.message, "error");
     }
-    catch (error) {
+    return;
+  }
 
-        document.getElementById("message").innerText =
-            error.message;
-
-    }
-
+  setAlert("registerAlert", "Account created. Redirecting to login...", "success");
+  setTimeout(() => goTo("login.html"), 900);
 }
 
-
-
-// =============================
-// LOGIN
-// =============================
-
-const loginForm = document.getElementById("loginForm");
-
-if (loginForm) {
-
-    loginForm.addEventListener("submit", loginUser);
-
-}
+// ==========================================================================
+// Login
+// ==========================================================================
 
 async function loginUser(event) {
+  event.preventDefault();
 
-    if (!loginForm) return;
+  const form = event.target;
+  clearFieldErrors(form);
+  setAlert("loginAlert", null);
 
-    event.preventDefault();
+  const request = {
+    email: document.getElementById("email").value.trim(),
+    password: document.getElementById("password").value,
+  };
 
-    const request = {
+  setButtonLoading("loginSubmit", true, "Signing in...");
 
-        email: document.getElementById("email").value,
+  try {
+    // 1. Log in and get the token.
+    const loginResponse = await apiPost("/api/auth/login", request, false);
+    saveToken(loginResponse.token);
 
-        password: document.getElementById("password").value
+    // 2. Fetch the logged-in user's profile (this is how we know the role,
+    //    since /api/auth/login itself doesn't return one).
+    const user = await apiGet("/api/users/profile");
+    saveUser(user);
 
-    };
+    // 3. Redirect based on role.
+    goTo(homePathForRole(user.role));
+  } catch (error) {
+    removeToken();
+    removeUser();
+    setAlert("loginAlert", error.message, "error");
+  } finally {
+    setButtonLoading("loginSubmit", false, "Sign in");
+  }
+}
 
-    try {
+// ==========================================================================
+// Small UI helpers shared by auth pages
+// ==========================================================================
 
-        // =============================
-        // 1. Login
-        // =============================
+function setAlert(id, message, type) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!message) {
+    el.className = "alert";
+    el.textContent = "";
+    return;
+  }
+  el.className = `alert show alert-${type}`;
+  el.textContent = message;
+}
 
-        const response = await apiPost(
-            "/api/auth/login",
-            request,
-            false
-        );
-
-        // Save JWT
-        saveToken(response.token);
-
-
-        // =============================
-        // 2. Get Logged-in User
-        // =============================
-
-        const user = await apiGet("/api/users/profile");
-
-
-        console.log("Logged-in user:", user);
-        console.log("Role:", user.role);
-
-
-        // =============================
-        // 3. Redirect Based On Role
-        // =============================
-
-        if (user.role === "ADMIN") {
-
-            alert("Login Successful!");
-
-            window.location.href =
-                "../html/admin-dashboard.html";
-
-        }
-       else if (user.role === "CUSTOMER") {
-
-            alert("Login Successful!");
-
-            window.location.href =
-                "../html/customer/customer-home.html";
-        }
-        else {
-
-            throw new Error(
-                "Unknown user role."
-            );
-
-        }
-
-    }
-    catch (error) {
-
-        console.error("Login Error:", error);
-
-        // Remove token if something failed
-        removeToken();
-
-        document.getElementById("message").innerText =
-            error.message;
-
-    }
+function setButtonLoading(id, loading, label) {
+  const btn = document.getElementById(id);
+  if (!btn) return;
+  btn.disabled = loading;
+  btn.textContent = label;
 }

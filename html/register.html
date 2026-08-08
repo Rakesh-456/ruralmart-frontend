@@ -1,85 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
-
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
-
-<title>Register</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register — RuralMart</title>
 <link rel="stylesheet" href="../css/styles.css">
-
 </head>
-
 <body>
 
-<div class="container">
+<header class="site-header">
+  <div class="nav-inner">
+    <a class="brand" href="index.html"><span class="brand-mark">🌾</span> RuralMart</a>
+  </div>
+</header>
 
-<div class="card">
+<div class="auth-shell">
+  <div class="card card-pad auth-card">
+    <h1>Create your account</h1>
+    <p class="auth-sub">Join RuralMart to start shopping local groceries.</p>
 
-<h1>🌾 RuralMart</h1>
+    <div id="registerAlert" class="alert"></div>
 
-<h2>Create Account</h2>
+    <form id="registerForm" novalidate>
+      <div class="form-group">
+        <label for="fullName">Full name</label>
+        <input type="text" id="fullName" placeholder="Rakesh Kumar" required>
+        <div class="field-error-text" data-for="fullName"></div>
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="you@example.com" required>
+        <div class="field-error-text" data-for="email"></div>
+      </div>
+      <div class="form-group">
+        <label for="phoneNumber">Phone number</label>
+        <input type="tel" id="phoneNumber" placeholder="9876543210" required>
+        <div class="field-error-text" data-for="phoneNumber"></div>
+        <div class="form-hint">10-digit Indian mobile number, starting 6-9.</div>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="At least 8 characters" required>
+        <div class="field-error-text" data-for="password"></div>
+      </div>
+      <button type="submit" id="registerSubmit" class="btn btn-primary btn-block">Create account</button>
+    </form>
 
-<form id="registerForm">
-
-<input
-type="text"
-id="fullName"
-placeholder="Full Name"
-required>
-
-<input
-type="email"
-id="email"
-placeholder="Email"
-required>
-
-<input
-type="text"
-id="phoneNumber"
-placeholder="Phone Number"
-required>
-
-<input
-type="password"
-id="password"
-placeholder="Password"
-required>
-
-<button type="submit">
-
-Register
-
-</button>
-
-</form>
-
-<p>
-
-Already have an account?
-
-<a href="login.html">
-
-Login
-
-</a>
-
-</p>
-
-<div id="message"
-class="message">
-
+    <p class="auth-foot">Already have an account? <a href="login.html">Log in</a></p>
+  </div>
 </div>
 
-</div>
-
-</div>
 <script src="../js/api.js"></script>
+<script src="../js/nav.js"></script>
 <script src="../js/auth.js"></script>
 </body>
-
 </html>

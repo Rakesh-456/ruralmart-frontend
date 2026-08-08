@@ -1,108 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
-    <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>RuralMart | Shop</title>
-
-    <link rel="stylesheet"
-          href="../../CSS/styles.css">
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RuralMart — Shop groceries</title>
+<link rel="stylesheet" href="../../css/styles.css">
 </head>
-
 <body>
 
-    <h2>🌾 RuralMart</h2>
+<div id="site-header"></div>
 
-    <button onclick="logout()">
-        Logout
-    </button>
+<div class="page">
+  <div class="container">
 
-    <h1>Welcome to RuralMart 👋</h1>
-
-    <p>
-        Browse products available from our shops.
-    </p>
-
-
-    <!-- Search -->
-
-    <input
-        type="text"
-        id="searchKeyword"
-        placeholder="Search products...">
-
-    <button onclick="searchCustomerProducts()">
-        Search
-    </button>
-
-    <button onclick="loadCustomerProducts()">
-        Clear
-    </button>
-
-
-    <hr>
-
-
-    <!-- Categories -->
-
-    <h3>Categories</h3>
-
-    <button onclick="loadCategory('GROCERY')">
-        Grocery
-    </button>
-
-    <button onclick="loadCategory('DAIRY')">
-        Dairy
-    </button>
-
-    <button onclick="loadCategory('VEGETABLES')">
-        Vegetables
-    </button>
-
-    <button onclick="loadCategory('FRUITS')">
-        Fruits
-    </button>
-
-    <button onclick="loadCategory('SNACKS')">
-        Snacks
-    </button>
-
-    <button onclick="loadCategory('BEVERAGES')">
-        Beverages
-    </button>
-
-    <button onclick="loadCategory('PERSONAL_CARE')">
-        Personal Care
-    </button>
-
-    <button onclick="loadCategory('HOUSEHOLD')">
-        Household
-    </button>
-
-
-    <hr>
-
-
-    <h2>Products</h2>
-
-    <div id="productContainer">
-
-        Loading products...
-
+    <div class="hero">
+      <h1>Fresh groceries, delivered from local shops.</h1>
+      <p>Browse everything available near you — search by name or explore by category.</p>
+      <div class="hero-search">
+        <input type="text" id="heroSearchInput" placeholder="Search for apples, rice, milk...">
+        <button class="btn btn-accent" id="heroSearchBtn" type="button">Search</button>
+      </div>
     </div>
 
+    <h2>Categories</h2>
+    <div class="category-row" id="categoryRow"></div>
 
-    <script src="../../js/api.js"></script>
-    <script src="../../js/auth.js"></script>
-    <script src="../../js/logout.js"></script>
-    <script src="../../js/customer.js"></script>
+    <h2>Products</h2>
+    <div id="productContainer" class="product-grid"></div>
 
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="container">
+    <span>🌾 RuralMart</span>
+    <span>Checkout &amp; payments coming soon.</span>
+  </div>
+</footer>
+
+<!-- Product details modal -->
+<div class="modal-backdrop" id="productModalBackdrop">
+  <div class="modal" style="max-width:520px;">
+    <div class="flex justify-between items-center">
+      <h3 class="mb-0">Product details</h3>
+      <button class="btn btn-ghost btn-sm" id="modalClose" type="button">✕</button>
+    </div>
+    <div id="modalBody" style="margin-top:10px;"></div>
+  </div>
+</div>
+
+<script src="../../js/api.js"></script>
+<script src="../../js/nav.js"></script>
+<script src="../../js/customer.js"></script>
 </body>
-
 </html>
