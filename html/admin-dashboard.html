@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — RuralMart Admin</title>
+<link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<div class="page">
+  <div class="container">
+
+    <div class="page-header">
+      <div class="eyebrow">Admin</div>
+      <h1>Dashboard</h1>
+      <p>A quick look at your shop's products.</p>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card accent-primary">
+        <div class="label">Total products</div>
+        <div class="value" id="totalProducts">–</div>
+      </div>
+      <div class="stat-card accent-success">
+        <div class="label">Active</div>
+        <div class="value" id="activeProducts">–</div>
+      </div>
+      <div class="stat-card accent-warning">
+        <div class="label">Inactive</div>
+        <div class="value" id="inactiveProducts">–</div>
+      </div>
+      <div class="stat-card accent-danger">
+        <div class="label">Out of stock</div>
+        <div class="value" id="outOfStockProducts">–</div>
+      </div>
+    </div>
+
+    <div class="dash-grid">
+      <div class="card card-pad">
+        <h3>Manage your shop</h3>
+        <p>Everything you need to run your storefront.</p>
+        <div class="quick-link-list">
+          <a class="quick-link" href="products.html">
+            <span class="qi">📦</span> Manage products
+          </a>
+          <a class="quick-link" href="add-product.html">
+            <span class="qi">➕</span> Add a new product
+          </a>
+          <a class="quick-link" id="shopQuickLink" href="create-shop.html">
+            <span class="qi">🏪</span> <span id="shopQuickLinkLabel">Loading shop status...</span>
+          </a>
+          <a class="quick-link" href="profile.html">
+            <span class="qi">👤</span> My profile
+          </a>
+        </div>
+      </div>
+
+      <div class="card card-pad">
+        <h3>Coming soon</h3>
+        <div class="coming-soon" style="margin-bottom:10px;">
+          <span>💳</span>
+          <span><strong>Payments</strong><br>No payment API exists on the backend yet.</span>
+        </div>
+        <div class="coming-soon">
+          <span>🧾</span>
+          <span><strong>Orders</strong><br>Order history requires a new Orders API.</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="../../js/api.js"></script>
+<script src="../../js/nav.js"></script>
+<script src="../../js/admin.js"></script>
+</body>
+</html>
