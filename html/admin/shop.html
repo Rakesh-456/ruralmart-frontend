@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Shop — RuralMart Admin</title>
+<link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<div class="page">
+  <div class="container" style="max-width:640px;">
+
+    <div class="page-header">
+      <div class="eyebrow">Admin</div>
+      <h1 id="shopNameHeading">My Shop</h1>
+    </div>
+
+    <!-- Shown once shop details load successfully -->
+    <div id="shopContent" style="display:none;">
+      <div class="card card-pad">
+        <div class="flex gap-12" style="margin-bottom:20px;">
+          <div><span class="form-hint">Created</span><br><strong id="createdAt">-</strong></div>
+          <div style="margin-left:24px;"><span class="form-hint">Last updated</span><br><strong id="updatedAt">-</strong></div>
+        </div>
+
+        <div id="shopAlert" class="alert"></div>
+        <form id="shopForm" novalidate>
+          <div class="form-group">
+            <label for="shopName">Shop name</label>
+            <input type="text" id="shopName" required>
+            <div class="field-error-text" data-for="shopName"></div>
+          </div>
+          <div class="form-group">
+            <label for="phoneNumber">Phone number</label>
+            <input type="tel" id="phoneNumber" required>
+            <div class="field-error-text" data-for="phoneNumber"></div>
+          </div>
+          <div class="form-group">
+            <label for="address">Address</label>
+            <input type="text" id="address" required>
+            <div class="field-error-text" data-for="address"></div>
+          </div>
+          <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" required></textarea>
+            <div class="field-error-text" data-for="description"></div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" id="shopSubmit" class="btn btn-primary">Save changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Shown if this admin hasn't created a shop yet -->
+    <div id="noShopState" style="display:none;">
+      <div class="empty-state card card-pad">
+        <div class="icon">🏪</div>
+        <h3>You haven't created a shop yet</h3>
+        <p>Set up your shop profile to start listing products.</p>
+        <a class="btn btn-primary" href="create-shop.html">Create your shop</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="../../js/api.js"></script>
+<script src="../../js/nav.js"></script>
+<script src="../../js/shop.js"></script>
+</body>
+</html>

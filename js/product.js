@@ -1,9 +1,20 @@
 // ==========================================================================
 // RuralMart - Admin Product Management
+//
+// GET /api/products/my-shop returns ALL of this shop's products, unpaginated
+// (there's no paginated version scoped to "my shop" on the backend — only
+// the global /api/products/page, which isn't shop-scoped). So filtering,
+// sorting, and pagination here are all done client-side over that full list.
+// This is the honest option given what the backend actually exposes; if a
+// paginated /api/products/my-shop/page endpoint gets added later, this can
+// switch to server-side paging the same way customer.js does.
 // ==========================================================================
 
 let allMyProducts = [];
+let filteredProducts = [];
 let pendingDeleteId = null;
+let adminPage = 0;
+let adminPageSize = 10;
 
 document.addEventListener("DOMContentLoaded", () => {
   if (!requireAuth("ADMIN")) return;
@@ -13,9 +24,17 @@ document.addEventListener("DOMContentLoaded", () => {
     renderNav("products");
     loadMyProducts();
 
-    document.getElementById("searchInput").addEventListener("input", applyFilters);
-    document.getElementById("categoryFilter").addEventListener("change", applyFilters);
-    document.getElementById("statusFilter").addEventListener("change", applyFilters);
+    document.getElementById("searchInput").addEventListener("input", () => applyFilters(true));
+    document.getElementById("categoryFilter").addEventListener("change", () => applyFilters(true));
+    document.getElementById("statusFilter").addEventListener("change", () => applyFilters(true));
+    document.getElementById("sortSelect").addEventListener("change", () => applyFilters(false));
+    document.getElementById("pageSizeSelect").addEventListener("change", (e) => {
+      adminPageSize = parseInt(e.target.value, 10);
+      applyFilters(true);
+    });
+
+    document.getElementById("prevPageBtn").addEventListener("click", () => goToAdminPage(adminPage - 1));
+    document.getElementById("nextPageBtn").addEventListener("click", () => goToAdminPage(adminPage + 1));
 
     document.getElementById("confirmDeleteBtn").addEventListener("click", confirmDelete);
     document.getElementById("cancelDeleteBtn").addEventListener("click", closeDeleteModal);
@@ -47,7 +66,7 @@ function populateCategorySelect(select) {
 }
 
 // ==========================================================================
-// List / filters
+// List / filters / sort / pagination
 // ==========================================================================
 
 async function loadMyProducts() {
@@ -56,31 +75,65 @@ async function loadMyProducts() {
 
   try {
     allMyProducts = await apiGet("/api/products/my-shop");
-    populateCategorySelect(document.getElementById("categoryFilter"));
-    document.getElementById("categoryFilter").insertAdjacentHTML("afterbegin", `<option value="">All categories</option>`);
-    applyFilters();
+
+    const catSelect = document.getElementById("categoryFilter");
+    populateCategorySelect(catSelect);
+    catSelect.insertAdjacentHTML("afterbegin", `<option value="">All categories</option>`);
+
+    applyFilters(true);
   } catch (error) {
     table.innerHTML = `<tr><td colspan="6" style="padding:30px;">
       <div class="empty-state" style="padding:20px;">
         <p>${escapeHtml(error.message)}</p>
-        <p class="form-hint">If you haven't created a shop yet, add products from your <a href="${resolvePath("admin/create-shop.html")}">shop setup page</a> first.</p>
+        <p class="form-hint">If you haven't created a shop yet, set one up from your <a href="${resolvePath("admin/create-shop.html")}">shop setup page</a> first.</p>
       </div></td></tr>`;
+    document.getElementById("paginationBar").style.display = "none";
   }
 }
 
-function applyFilters() {
+function applyFilters(resetPage) {
   const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
   const category = document.getElementById("categoryFilter").value;
   const status = document.getElementById("statusFilter").value;
+  const sort = document.getElementById("sortSelect").value;
 
-  const filtered = allMyProducts.filter((p) => {
+  filteredProducts = allMyProducts.filter((p) => {
     const matchesKeyword = !keyword || p.name.toLowerCase().includes(keyword) || p.brand.toLowerCase().includes(keyword);
     const matchesCategory = !category || p.category === category;
     const matchesStatus = !status || p.status === status;
     return matchesKeyword && matchesCategory && matchesStatus;
   });
 
-  renderProductTable(filtered);
+  if (sort === "name-asc") filteredProducts.sort((a, b) => a.name.localeCompare(b.name));
+  else if (sort === "price-asc") filteredProducts.sort((a, b) => a.price - b.price);
+  else if (sort === "price-desc") filteredProducts.sort((a, b) => b.price - a.price);
+  else if (sort === "stock-asc") filteredProducts.sort((a, b) => a.stock - b.stock);
+
+  if (resetPage) adminPage = 0;
+
+  const maxPage = Math.max(Math.ceil(filteredProducts.length / adminPageSize) - 1, 0);
+  if (adminPage > maxPage) adminPage = maxPage;
+
+  renderPage();
+}
+
+function goToAdminPage(page) {
+  const maxPage = Math.max(Math.ceil(filteredProducts.length / adminPageSize) - 1, 0);
+  if (page < 0 || page > maxPage) return;
+  adminPage = page;
+  renderPage();
+}
+
+function renderPage() {
+  const start = adminPage * adminPageSize;
+  const pageItems = filteredProducts.slice(start, start + adminPageSize);
+  renderProductTable(pageItems);
+
+  const totalPages = Math.max(Math.ceil(filteredProducts.length / adminPageSize), 1);
+  document.getElementById("pageIndicator").textContent = `Page ${adminPage + 1} of ${totalPages} · ${filteredProducts.length} product${filteredProducts.length === 1 ? "" : "s"}`;
+  document.getElementById("prevPageBtn").disabled = adminPage <= 0;
+  document.getElementById("nextPageBtn").disabled = adminPage >= totalPages - 1;
+  document.getElementById("paginationBar").style.display = "flex";
 }
 
 function statusBadgeClass(status) {

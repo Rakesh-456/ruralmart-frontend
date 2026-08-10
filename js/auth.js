@@ -30,7 +30,6 @@ async function registerUser(event) {
   const request = {
     fullName: document.getElementById("fullName").value.trim(),
     email: document.getElementById("email").value.trim(),
-    phoneNumber: document.getElementById("phoneNumber").value.trim(),
     password: document.getElementById("password").value,
   };
 

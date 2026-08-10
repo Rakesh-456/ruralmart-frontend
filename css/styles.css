@@ -636,3 +636,11 @@ table.data-table { width: 100%; border-collapse: collapse; }
   h1 { font-size: 1.6rem; }
   .container { padding: 0 16px; }
 }
+
+#otp {
+  letter-spacing: 6px;
+  font-weight: 700;
+  text-align: center;
+  font-size: 1.15rem;
+}
+ 

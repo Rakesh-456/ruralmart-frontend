@@ -1,7 +1,24 @@
 // ==========================================================================
 // RuralMart - Customer Home
+//
+// Browsing (no search/category active) uses the backend's real pagination:
+// GET /api/products/page?page=&size=
+//
+// Search and category-filter use their own (unpaginated) endpoints, since
+// that's what the backend provides for them.
+//
+// Sorting is done client-side on whatever page of results is currently
+// loaded — the backend does not implement a sort parameter yet
+// (GET /api/products/page has no `sort`), so this is the honest limit
+// of what's possible without a backend change.
 // ==========================================================================
 
+let currentMode = "browse"; // "browse" | "search" | "category"
+let currentQuery = "";      // keyword or category value, depending on mode
+let currentPage = 0;
+let pageSize = 12;
+let totalPages = 1;
+let currentSort = "";
 let activeCategory = null;
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -19,13 +36,20 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  document.getElementById("sortSelect").addEventListener("change", (e) => {
+    currentSort = e.target.value;
+    renderCurrentPage();
+  });
+  document.getElementById("prevPageBtn").addEventListener("click", () => changePage(currentPage - 1));
+  document.getElementById("nextPageBtn").addEventListener("click", () => changePage(currentPage + 1));
+
   const params = new URLSearchParams(window.location.search);
   const initialSearch = params.get("search");
   if (initialSearch) {
     if (heroInput) heroInput.value = initialSearch;
     runSearch(initialSearch);
   } else {
-    loadProducts();
+    loadBrowsePage(0);
   }
 
   document.getElementById("modalClose").addEventListener("click", closeProductModal);
@@ -46,7 +70,7 @@ function renderCategoryPills() {
       if (activeCategory === cat) {
         activeCategory = null;
         row.querySelectorAll(".category-pill").forEach((b) => b.classList.remove("active"));
-        loadProducts();
+        loadBrowsePage(0);
       } else {
         activeCategory = cat;
         row.querySelectorAll(".category-pill").forEach((b) => b.classList.toggle("active", b === btn));
@@ -60,44 +84,103 @@ function runSearch(keyword) {
   activeCategory = null;
   document.querySelectorAll(".category-pill").forEach((b) => b.classList.remove("active"));
   if (!keyword) {
-    loadProducts();
+    loadBrowsePage(0);
     return;
   }
-  searchProducts(keyword);
+  loadSearch(keyword);
 }
 
-async function loadProducts() {
+// ==========================================================================
+// Data loading
+// ==========================================================================
+
+async function loadBrowsePage(page) {
+  currentMode = "browse";
+  currentPage = page;
+  setPaginationVisible(true);
+
   const container = document.getElementById("productContainer");
   container.innerHTML = skeletonGrid();
+
   try {
-    const products = await apiGet("/api/products");
-    renderProductCards(products);
+    const data = await apiGet(`/api/products/page?page=${page}&size=${pageSize}`);
+    window.__pageProducts = data.content || [];
+    totalPages = data.totalPages || 1;
+    updatePaginationUI();
+    renderCurrentPage();
   } catch (error) {
     renderError(error.message);
   }
 }
 
-async function searchProducts(keyword) {
+async function loadSearch(keyword) {
+  currentMode = "search";
+  currentQuery = keyword;
+  setPaginationVisible(false);
+
   const container = document.getElementById("productContainer");
   container.innerHTML = skeletonGrid();
+
   try {
     const products = await apiGet(`/api/products/search?keyword=${encodeURIComponent(keyword)}`);
-    renderProductCards(products);
+    window.__pageProducts = products;
+    renderCurrentPage();
   } catch (error) {
     renderError(error.message);
   }
 }
 
 async function loadCategory(category) {
+  currentMode = "category";
+  currentQuery = category;
+  setPaginationVisible(false);
+
   const container = document.getElementById("productContainer");
   container.innerHTML = skeletonGrid();
+
   try {
     const products = await apiGet(`/api/products/category/${category}`);
-    renderProductCards(products);
+    window.__pageProducts = products;
+    renderCurrentPage();
   } catch (error) {
     renderError(error.message);
   }
 }
+
+function changePage(page) {
+  if (page < 0 || page >= totalPages) return;
+  loadBrowsePage(page);
+}
+
+function setPaginationVisible(visible) {
+  document.getElementById("paginationBar").style.display = visible ? "flex" : "none";
+}
+
+function updatePaginationUI() {
+  document.getElementById("pageIndicator").textContent = `Page ${currentPage + 1} of ${totalPages}`;
+  document.getElementById("prevPageBtn").disabled = currentPage <= 0;
+  document.getElementById("nextPageBtn").disabled = currentPage >= totalPages - 1;
+}
+
+// ==========================================================================
+// Sorting (client-side, applied to the currently loaded set)
+// ==========================================================================
+
+function sortProducts(products) {
+  const list = [...products];
+  if (currentSort === "name-asc") list.sort((a, b) => a.name.localeCompare(b.name));
+  else if (currentSort === "price-asc") list.sort((a, b) => a.price - b.price);
+  else if (currentSort === "price-desc") list.sort((a, b) => b.price - a.price);
+  return list;
+}
+
+function renderCurrentPage() {
+  renderProductCards(sortProducts(window.__pageProducts || []));
+}
+
+// ==========================================================================
+// Rendering
+// ==========================================================================
 
 function skeletonGrid() {
   return `<div class="product-grid">${Array(8)
@@ -111,7 +194,7 @@ function renderError(message) {
       <div class="icon">⚠️</div>
       <h3>Couldn't load products</h3>
       <p>${escapeHtml(message)}</p>
-      <button class="btn btn-outline" onclick="loadProducts()">Try again</button>
+      <button class="btn btn-outline" onclick="loadBrowsePage(0)">Try again</button>
     </div>`;
 }
 
