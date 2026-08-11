@@ -25,23 +25,21 @@
     <h2>Categories</h2>
     <div class="category-row" id="categoryRow"></div>
 
-    <div class="toolbar">
-      <h2 class="mb-0">Products</h2>
-      <div class="toolbar-spacer"></div>
-      <select id="sortSelect">
-        <option value="">Sort by</option>
-        <option value="name-asc">Name (A–Z)</option>
-        <option value="price-asc">Price (Low to High)</option>
-        <option value="price-desc">Price (High to Low)</option>
-      </select>
-    </div>
+    <div id="productSection">
+      <div class="toolbar">
+        <h2 class="mb-0">Products</h2>
+        <div class="toolbar-spacer"></div>
+        <select id="sortSelect">
+          <option value="">Sort by</option>
+          <option value="name-asc">Name (A–Z)</option>
+          <option value="price-asc">Price (Low to High)</option>
+          <option value="price-desc">Price (High to Low)</option>
+        </select>
+      </div>
 
-    <div id="productContainer" class="product-grid"></div>
+      <div id="productContainer" class="product-grid"></div>
 
-    <div class="toolbar" id="paginationBar" style="justify-content:center;margin-top:28px;">
-      <button class="btn btn-outline btn-sm" id="prevPageBtn" type="button">← Previous</button>
-      <span class="text-muted" id="pageIndicator" style="font-size:.85rem;font-weight:600;">Page 1 of 1</span>
-      <button class="btn btn-outline btn-sm" id="nextPageBtn" type="button">Next →</button>
+      <div id="paginationBar" style="margin-top:8px;"></div>
     </div>
 
   </div>
@@ -67,6 +65,7 @@
 
 <script src="../../js/api.js"></script>
 <script src="../../js/nav.js"></script>
+<script src="../../js/toast.js"></script>
 <script src="../../js/customer.js"></script>
 </body>
 </html>

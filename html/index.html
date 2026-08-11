@@ -3,55 +3,94 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RuralMart — Fresh groceries from rural shops</title>
+<title>RuralMart — Fresh groceries from your local shop</title>
 <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
 
-<header class="site-header">
-  <div class="nav-inner">
-    <a class="brand" href="index.html"><span class="brand-mark">🌾</span> RuralMart</a>
-    <div class="nav-right">
-      <a class="btn btn-ghost" href="login.html">Login</a>
-      <a class="btn btn-primary" href="register.html">Register</a>
-    </div>
-  </div>
-</header>
+<div class="announce-strip">Fresh groceries from your local shop</div>
+<div id="site-header"></div>
 
 <div class="page">
   <div class="container">
-    <div class="hero" style="margin-top:32px;">
-      <h1>Fresh groceries, straight from rural shops.</h1>
-      <p>RuralMart connects local grocery shops with customers nearby — browse products, compare prices, and shop from vendors you trust.</p>
-      <div class="hero-search">
-        <a class="btn btn-accent" href="register.html">Get started</a>
-        <a class="btn btn-outline" style="background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.4);color:#fff;" href="login.html">I already have an account</a>
+
+    <!-- Hero -->
+    <section class="home-hero">
+      <div class="home-hero-copy">
+        <div class="eyebrow">Local &amp; fresh</div>
+        <h1>Fresh groceries, closer to home.</h1>
+        <p>Shop everyday essentials from your local RuralMart shop — simple, honest, and nearby.</p>
+        <div class="home-hero-ctas">
+          <button class="btn btn-primary" id="shopNowBtn" type="button">Shop Now</button>
+          <button class="btn btn-outline" id="exploreCategoriesBtn" type="button">Explore Categories</button>
+        </div>
       </div>
+      <div class="home-hero-visual">
+        <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=900&q=80" alt="Fresh vegetables and groceries in crates" onerror="this.style.display='none'">
+      </div>
+    </section>
+
+    <!-- Categories -->
+    <section class="section" id="categorySection">
+      <h2>Shop by category</h2>
+      <div class="category-showcase" id="categoryShowcase"></div>
+    </section>
+
+    <!-- Promo banner -->
+    <div class="promo-banner">
+      <div>
+        <h3>Support your local shop</h3>
+        <p>Every order goes straight to a RuralMart shop near you.</p>
+      </div>
+      <a class="btn btn-primary" href="register.html">Get started</a>
     </div>
 
-    <div class="section" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;">
-      <div class="card card-pad">
-        <h3>For customers</h3>
-        <p>Search and filter groceries from local shops, view details, and build your order — checkout is on the way.</p>
+    <!-- Featured products -->
+    <section class="section">
+      <h2>Popular products</h2>
+      <div id="featuredProducts"></div>
+    </section>
+
+    <!-- Why RuralMart -->
+    <section class="section">
+      <h2>Why RuralMart</h2>
+      <div class="benefit-grid">
+        <div class="benefit-card">
+          <div class="icon-wrap">🏘️</div>
+          <h3>Local shopping</h3>
+          <p>Buy directly from grocery shops in your own area.</p>
+        </div>
+        <div class="benefit-card">
+          <div class="icon-wrap">🥬</div>
+          <h3>Fresh essentials</h3>
+          <p>Everyday groceries, kept simple and stocked by real shops.</p>
+        </div>
+        <div class="benefit-card">
+          <div class="icon-wrap">🧾</div>
+          <h3>Simple ordering</h3>
+          <p>Browse, search, and view products with a clear, no-clutter layout.</p>
+        </div>
+        <div class="benefit-card">
+          <div class="icon-wrap">🤝</div>
+          <h3>Trusted local sellers</h3>
+          <p>Every shop is run by a verified account, not an anonymous listing.</p>
+        </div>
       </div>
-      <div class="card card-pad">
-        <h3>For shop owners</h3>
-        <p>Set up your shop, list products, manage stock and pricing, and track everything from one dashboard.</p>
-      </div>
-      <div class="card card-pad">
-        <h3>Built for rural reach</h3>
-        <p>A simple, fast experience that works well even on modest connections and smaller screens.</p>
-      </div>
-    </div>
+    </section>
+
   </div>
 </div>
 
 <footer class="site-footer">
   <div class="container">
     <span>🌾 RuralMart</span>
-    <span>Built for rural grocery commerce.</span>
+    <span>Checkout &amp; payments coming soon.</span>
   </div>
 </footer>
 
+<script src="../js/api.js"></script>
+<script src="../js/nav.js"></script>
+<script src="../js/toast.js"></script>
+<script src="../js/home.js"></script>
 </body>
 </html>

@@ -208,8 +208,10 @@ async function confirmDelete() {
     await apiDelete(`/api/products/${pendingDeleteId}`);
     closeDeleteModal();
     loadMyProducts();
+    if (typeof showToast === "function") showToast("Product deleted successfully", "success");
   } catch (error) {
-    alert(error.message);
+    if (typeof showToast === "function") showToast(error.message, "error");
+    else alert(error.message);
   } finally {
     btn.disabled = false;
     btn.textContent = "Delete product";
@@ -241,6 +243,7 @@ async function addProduct(event) {
     return;
   }
 
+  if (typeof queueToast === "function") queueToast("Product added successfully", "success");
   goTo("admin/products.html");
 }
 
@@ -294,6 +297,7 @@ async function updateProduct(event) {
     return;
   }
 
+  if (typeof queueToast === "function") queueToast("Product updated successfully", "success");
   goTo("admin/products.html");
 }
 

@@ -275,6 +275,7 @@ async function createShop(event) {
     return;
   }
 
+  if (typeof queueToast === "function") queueToast("Shop created successfully", "success");
   goTo("admin/shop.html");
 }
 
@@ -320,6 +321,7 @@ async function updateMyShop(event) {
   document.getElementById("shopNameHeading").textContent = result.data.shopName;
   document.getElementById("updatedAt").textContent = formatDate(result.data.updatedAt);
   setAlert("shopAlert", "Shop details updated.", "success");
+  if (typeof showToast === "function") showToast("Shop details updated", "success");
 }
 
 function readShopForm() {

@@ -81,6 +81,7 @@ async function loginUser(event) {
     saveUser(user);
 
     // 3. Redirect based on role.
+    if (typeof queueToast === "function") queueToast("Login successful", "success");
     goTo(homePathForRole(user.role));
   } catch (error) {
     removeToken();

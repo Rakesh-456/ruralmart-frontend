@@ -1,23 +1,24 @@
 // ==========================================================================
-// RuralMart - Customer Home
+// RuralMart - Shop / Browse Products
 //
 // Browsing (no search/category active) uses the backend's real pagination:
-// GET /api/products/page?page=&size=
+// GET /api/products/page?page=&size= — numbered pagination UI below is
+// driven entirely by this response (totalPages / totalElements), not
+// client-side slicing.
 //
 // Search and category-filter use their own (unpaginated) endpoints, since
-// that's what the backend provides for them.
+// that's what the backend provides for them - pagination UI is hidden for
+// those views since there's nothing paginated to page through.
 //
-// Sorting is done client-side on whatever page of results is currently
-// loaded — the backend does not implement a sort parameter yet
-// (GET /api/products/page has no `sort`), so this is the honest limit
-// of what's possible without a backend change.
+// Sorting is client-side on whatever set is currently loaded - the backend
+// has no `sort` parameter on any product endpoint, so this is the honest
+// limit of what's possible without a backend change.
 // ==========================================================================
 
-let currentMode = "browse"; // "browse" | "search" | "category"
-let currentQuery = "";      // keyword or category value, depending on mode
 let currentPage = 0;
 let pageSize = 12;
 let totalPages = 1;
+let totalElements = 0;
 let currentSort = "";
 let activeCategory = null;
 
@@ -40,14 +41,17 @@ document.addEventListener("DOMContentLoaded", () => {
     currentSort = e.target.value;
     renderCurrentPage();
   });
-  document.getElementById("prevPageBtn").addEventListener("click", () => changePage(currentPage - 1));
-  document.getElementById("nextPageBtn").addEventListener("click", () => changePage(currentPage + 1));
 
   const params = new URLSearchParams(window.location.search);
   const initialSearch = params.get("search");
+  const initialCategory = params.get("category");
+
   if (initialSearch) {
     if (heroInput) heroInput.value = initialSearch;
     runSearch(initialSearch);
+  } else if (initialCategory) {
+    activateCategoryPill(initialCategory);
+    loadCategory(initialCategory);
   } else {
     loadBrowsePage(0);
   }
@@ -80,6 +84,14 @@ function renderCategoryPills() {
   });
 }
 
+function activateCategoryPill(cat) {
+  activeCategory = cat;
+  // Pills render slightly after this runs on first load, so wait a tick.
+  setTimeout(() => {
+    document.querySelectorAll(".category-pill").forEach((b) => b.classList.toggle("active", b.dataset.cat === cat));
+  }, 0);
+}
+
 function runSearch(keyword) {
   activeCategory = null;
   document.querySelectorAll(".category-pill").forEach((b) => b.classList.remove("active"));
@@ -95,7 +107,6 @@ function runSearch(keyword) {
 // ==========================================================================
 
 async function loadBrowsePage(page) {
-  currentMode = "browse";
   currentPage = page;
   setPaginationVisible(true);
 
@@ -106,7 +117,8 @@ async function loadBrowsePage(page) {
     const data = await apiGet(`/api/products/page?page=${page}&size=${pageSize}`);
     window.__pageProducts = data.content || [];
     totalPages = data.totalPages || 1;
-    updatePaginationUI();
+    totalElements = data.totalElements != null ? data.totalElements : window.__pageProducts.length;
+    renderPaginationControls();
     renderCurrentPage();
   } catch (error) {
     renderError(error.message);
@@ -114,8 +126,6 @@ async function loadBrowsePage(page) {
 }
 
 async function loadSearch(keyword) {
-  currentMode = "search";
-  currentQuery = keyword;
   setPaginationVisible(false);
 
   const container = document.getElementById("productContainer");
@@ -131,8 +141,6 @@ async function loadSearch(keyword) {
 }
 
 async function loadCategory(category) {
-  currentMode = "category";
-  currentQuery = category;
   setPaginationVisible(false);
 
   const container = document.getElementById("productContainer");
@@ -148,18 +156,66 @@ async function loadCategory(category) {
 }
 
 function changePage(page) {
-  if (page < 0 || page >= totalPages) return;
-  loadBrowsePage(page);
+  if (page < 0 || page >= totalPages || page === currentPage) return;
+  loadBrowsePage(page).then(() => {
+    document.getElementById("productSection").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 }
 
 function setPaginationVisible(visible) {
-  document.getElementById("paginationBar").style.display = visible ? "flex" : "none";
+  document.getElementById("paginationBar").style.display = visible ? "block" : "none";
 }
 
-function updatePaginationUI() {
-  document.getElementById("pageIndicator").textContent = `Page ${currentPage + 1} of ${totalPages}`;
-  document.getElementById("prevPageBtn").disabled = currentPage <= 0;
-  document.getElementById("nextPageBtn").disabled = currentPage >= totalPages - 1;
+// ==========================================================================
+// Numbered pagination UI
+// Shows: Previous [1] [2] [3] ... [n] Next, with an ellipsis when there
+// are more pages than fit, and a "Showing X-Y of Z products" summary.
+// ==========================================================================
+
+function renderPaginationControls() {
+  const bar = document.getElementById("paginationBar");
+
+  const start = totalElements === 0 ? 0 : currentPage * pageSize + 1;
+  const end = Math.min((currentPage + 1) * pageSize, totalElements);
+
+  const pageNumbers = buildPageNumberList(currentPage, totalPages);
+
+  const buttonsHtml = pageNumbers
+    .map((p) =>
+      p === "..."
+        ? `<span class="page-btn ellipsis">…</span>`
+        : `<button type="button" class="page-btn${p === currentPage ? " active" : ""}" onclick="changePage(${p})">${p + 1}</button>`
+    )
+    .join("");
+
+  bar.innerHTML = `
+    <div class="pagination-numbered">
+      <button type="button" class="page-btn" ${currentPage <= 0 ? "disabled" : ""} onclick="changePage(${currentPage - 1})">‹ Previous</button>
+      ${buttonsHtml}
+      <button type="button" class="page-btn" ${currentPage >= totalPages - 1 ? "disabled" : ""} onclick="changePage(${currentPage + 1})">Next ›</button>
+    </div>
+    <div class="pagination-summary">Showing ${start}–${end} of ${totalElements} products</div>
+  `;
+}
+
+// Returns an array like [0,1,2,"...",9] (0-indexed page numbers, plus "..."
+// placeholders) - always shows first, last, and a window around current.
+function buildPageNumberList(current, total) {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i);
+  }
+
+  const pages = new Set([0, total - 1, current, current - 1, current + 1]);
+  const sorted = [...pages].filter((p) => p >= 0 && p < total).sort((a, b) => a - b);
+
+  const result = [];
+  let prev = null;
+  for (const p of sorted) {
+    if (prev !== null && p - prev > 1) result.push("...");
+    result.push(p);
+    prev = p;
+  }
+  return result;
 }
 
 // ==========================================================================
@@ -231,7 +287,7 @@ function productCardHtml(product) {
       <div class="product-media">
         <span class="product-stock-flag ${flag.cls}">${flag.label}</span>
         <img src="${escapeAttr(product.imageUrl)}" alt="${escapeAttr(product.name)}"
-             onerror="this.src='https://placehold.co/400x340/f0eee6/6b7060?text=RuralMart'">
+             onerror="this.src='https://placehold.co/400x340/f0f5ee/6b756c?text=RuralMart'">
       </div>
       <div class="product-body">
         <div class="product-category">${product.category.replace("_", " ")}</div>
@@ -253,7 +309,11 @@ function addToCart() {
   // Cart functionality requires a backend API that does not currently exist
   // (POST /api/cart/items, GET /api/cart, etc). Keeping this as a clear
   // "coming soon" notice instead of faking a working cart.
-  alert("Cart is coming soon — this needs a Cart API on the backend that doesn't exist yet.");
+  if (typeof showToast === "function") {
+    showToast("Cart is coming soon — this needs a Cart API that doesn't exist yet.", "info");
+  } else {
+    alert("Cart is coming soon — this needs a Cart API on the backend that doesn't exist yet.");
+  }
 }
 
 function openProductModal(id) {
@@ -264,7 +324,7 @@ function openProductModal(id) {
   document.getElementById("modalBody").innerHTML = `
     <img src="${escapeAttr(product.imageUrl)}" alt="${escapeAttr(product.name)}"
          style="width:100%;aspect-ratio:1/0.7;object-fit:cover;border-radius:12px;margin-bottom:16px;"
-         onerror="this.src='https://placehold.co/500x350/f0eee6/6b7060?text=RuralMart'">
+         onerror="this.src='https://placehold.co/500x350/f0f5ee/6b756c?text=RuralMart'">
     <span class="badge ${flag.cls === 'out' ? 'badge-out' : 'badge-active'}">${flag.label}</span>
     <h2 style="margin-top:10px;">${escapeHtml(product.name)}</h2>
     <p>${escapeHtml(product.description)}</p>

@@ -23,14 +23,19 @@ function navLinksFor(role) {
     return [
       { key: "dashboard", label: "Dashboard", href: "admin/admin-dashboard.html" },
       { key: "products", label: "Products", href: "admin/products.html" },
-      { key: "shop", label: "Shop", href: "admin/shop.html" },
+      { key: "shop", label: "My Shop", href: "admin/shop.html" },
     ];
   }
-  return [{ key: "home", label: "Home", href: "customer/customer-home.html" }];
+  if (role === "CUSTOMER") {
+    return [{ key: "home", label: "Shop", href: "customer/customer-home.html" }];
+  }
+  // Guest - no protected links, since every /api/products/** call requires
+  // a JWT on this backend. Home just points at the public homepage.
+  return [{ key: "home", label: "Home", href: "index.html" }];
 }
 
 function profileHref(role) {
-  return role === "ADMIN" ? "admin/profile.html" : "customer/profile.html";
+    return "profile.html";
 }
 
 // activeKey highlights the current nav link.
@@ -51,36 +56,41 @@ function renderNav(activeKey, showSearch) {
     .join("");
 
   const searchHtml =
-    showSearch && role !== "ADMIN"
+    showSearch && role === "CUSTOMER"
       ? `<div class="nav-search">
            <input type="text" id="navSearchInput" placeholder="Search products...">
          </div>`
       : "";
 
+  const rightHtml = user
+    ? `
+      <div class="profile-menu">
+        <button class="profile-trigger" id="profileTrigger" type="button">
+          <span class="profile-avatar">${initialsOf(user.fullName)}</span>
+          <span class="profile-text">
+            <span class="profile-name">${escapeHtml(user.fullName)}</span>
+            <span class="profile-role">${role ? role.toLowerCase() : ""}</span>
+          </span>
+        </button>
+        <div class="profile-dropdown" id="profileDropdown">
+          <a href="${resolvePath(profileHref(role))}">My Profile</a>
+          <a href="${resolvePath(profileHref(role))}#password">Change Password</a>
+          <div class="divider"></div>
+          <button type="button" class="danger-item" onclick="logout()">Logout</button>
+        </div>
+      </div>`
+    : `
+      <a class="btn btn-ghost btn-sm" href="${resolvePath("login.html")}">Login</a>
+      <a class="btn btn-primary btn-sm" href="${resolvePath("register.html")}">Register</a>`;
+
   mount.innerHTML = `
     <div class="nav-inner">
-      <a class="brand" href="${resolvePath(homePathForRole(role))}">
+      <a class="brand" href="${resolvePath(user ? homePathForRole(role) : "index.html")}">
         <span class="brand-mark">🌾</span> RuralMart
       </a>
       <nav class="nav-links">${linksHtml}</nav>
       ${searchHtml}
-      <div class="nav-right">
-        <div class="profile-menu">
-          <button class="profile-trigger" id="profileTrigger" type="button">
-            <span class="profile-avatar">${initialsOf(user ? user.fullName : "")}</span>
-            <span class="profile-text">
-              <span class="profile-name">${user ? escapeHtml(user.fullName) : ""}</span>
-              <span class="profile-role">${role ? role.toLowerCase() : ""}</span>
-            </span>
-          </button>
-          <div class="profile-dropdown" id="profileDropdown">
-            <a href="${resolvePath(profileHref(role))}">My Profile</a>
-            <a href="${resolvePath(profileHref(role))}#password">Change Password</a>
-            <div class="divider"></div>
-            <button type="button" class="danger-item" onclick="logout()">Logout</button>
-          </div>
-        </div>
-      </div>
+      <div class="nav-right">${rightHtml}</div>
     </div>
   `;
 
